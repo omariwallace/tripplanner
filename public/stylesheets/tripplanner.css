@@ -1,0 +1,33 @@
+html {
+  height: 100%; }
+
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0; }
+
+.navbar_container {
+  width: 80%; }
+
+.page_container {
+  border-radius: 10px;
+  width: 80%;
+  background-color: lightgrey;
+  margin-top: 100px; }
+
+.row {
+  padding: 10px 0; }
+
+.dropdown_label {
+  margin-top: 0px; }
+
+.dropdown {
+  width: 70%;
+  display: inline-block; }
+  .dropdown btn {
+    display: inline; }
+
+#map-canvas {
+  float: right;
+  height: 500px;
+  width: 100%; }

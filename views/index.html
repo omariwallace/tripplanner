@@ -1,0 +1,65 @@
+<!-- index.html -->
+{% extends "layout.html" %}
+
+{% block heading %}Trip Planner{% endblock %}
+
+{% block content %}
+<section class='row'>
+	<div class='col-lg-3'>
+		<div id='day_buttons' class='btn-group'>
+			<button type="button" class="btn btn-default">Day 1</button>
+		</div>
+		<button type="button" class="btn btn-default" id="add_day">+Add Day</button>
+	</div>
+	<div class='col-lg-3'>
+		<h3 class="dropdown_label">Hotels</h3>
+		<select id="hotels_list" class="form-control dropdown">
+			<option>Select Hotel...</option>
+		</select>
+		<button type="submit" class="btn btn-primary" id="add_hotel">Add</button>
+	</div>
+	<div class='col-lg-3'>
+		<h3 class="dropdown_label">Things to do</h3>
+		<select id="things_to_do_list" class="form-control dropdown">
+			<option>Select Activity...</option>
+		</select>
+		<button type="submit" class="btn btn-primary" id="add_thing_to_do">Add</button>
+	</div>
+	<div class='col-lg-3'>
+		<h3 class="dropdown_label">Restaurants</h3>
+		<select id="restaurants_list" class="form-control dropdown">
+			<option>Select Restaurant...</option>
+		</select>
+		<button type="submit" class="btn btn-primary" id="add_restaurant">Add</button>
+	</div>
+</section> <!-- end page head row -->
+<section class="row"> <!-- Itinerary -->
+	<div class="col-lg-3">
+		<article>
+			<h2>Plan for Day 1</h2>
+			<ul>
+				<li>Hotel
+					<ul id="hotel_itinerary">
+					</ul>
+				</li>
+				<li>Things to Do
+					<ul id="things_to_do_itinerary">
+					</ul>
+				</li>
+				<li>Restaurants
+					<ul id="restaurant_itinerary">
+					</ul>
+				</li>
+			</ul>
+		</article>
+	</aside>
+</div>
+<div class="col-lg-9 map_container">
+		<div id="map-canvas"></div>
+</div>
+	</aside>
+</section>
+{% endblock %}
+
+
+
