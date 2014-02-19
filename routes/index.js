@@ -21,3 +21,19 @@ exports.index = function(req, res){
     });
   });
 };
+
+exports.visit_create = function (req, res) {
+  models.Visit.create({post_data: post_data}, function(err, visit_data) {
+    console.log(visit_data);
+  })
+}
+/* Visits Schema
+  attraction_type: String, // hotel, thingtodo, restaurant
+  attraction_id: ObjectID, // database id of attraction object
+  visit_order: Number, // integer ordering of the item in the day
+  day_number: Number
+  */
+
+exports.visit_index = function () {
+
+}

@@ -6,9 +6,11 @@ db.on('error', console.error.bind(console, 'connection error:'));
 var Place,
     Hotel,
     ThingsToDo,
-    Restaurant;
+    Restaurant,
+    Visit;
 
 var Schema = mongoose.Schema;
+var ObjectID = Schema.Types.ObjectId;
 
 var placeSchema = new Schema({
   name: String,
@@ -36,6 +38,13 @@ var restaurantSchema = new Schema({
   price: Number // integer fro 1-5 for $'s
 });
 
+var visitSchema = new Schema({
+  attraction_type: String, // hotel, thingtodo, restaurant
+  attraction_id: ObjectID, // database id of attraction object
+  visit_order: Number, // integer ordering of the item in the day
+  day_number: Number
+});
+
 Place = mongoose.model('Place', placeSchema);
 
 Hotel = mongoose.model('Hotel', hotelSchema);
@@ -44,4 +53,6 @@ ThingsToDo = mongoose.model('ThingsToDo', thingsToDoSchema);
 
 Restaurant = mongoose.model('Restaurant', restaurantSchema);
 
-module.exports = {'Place': Place, 'Hotel': Hotel, 'ThingsToDo': ThingsToDo, 'Restaurant':Restaurant};
+Visit = mongoose.model('Visit', visitSchema);
+
+module.exports = {'Place': Place, 'Hotel': Hotel, 'ThingsToDo': ThingsToDo, 'Restaurant':Restaurant, 'Visit': Visit};

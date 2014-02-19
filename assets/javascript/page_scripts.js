@@ -29,12 +29,28 @@ $(document).ready(function() {
    initialize_gmaps();
 });
 
+// Adding a day
+var day_no = 1;
+$(document).ready(function() {
+  DayCreator(day_no)
+  $('#add_day').on('click', function() {
+    day_no = parseInt(day_no, 10);
+    clearItems(day_no);
+    if (day_no < 5) {
+      $('#day_buttons').append('<button type="button" class="btn btn-default">Day '+(day_no+1)+'</button>');
+      day_no += 1;
+    }
+    DayCreator(day_no)
+  });
+});
+
 /** Day Button Functions **/
 $(document).ready(function() {
   $('#day_buttons').on('click', 'button',function() {
     // !!! the $(this) allows you to access the button that was clicked !!!
     clearItems(window.day_no);
     window.day_no = $(this).text().slice(-1);
+    alert(window.day_no)
     $("#daily_itinerary h2").text("Plan for Day "+day_no);
     showItems(window.day_no);
   })
@@ -45,6 +61,9 @@ var daily_plan = {};
 var DayCreator = function (day_no) {
   daily_plan[day_no] = {hotels: [], things_to_do: [], restaurants: [], markers: []}
 }
+
+/** {{TBD}} Create a general type array that will be used for all general functions !!! **/
+// hotel, restaurant, things_to_do
 
 /** Clear Items Functionality **/
 function clearItems(day_no) {
@@ -73,22 +92,6 @@ function showItems (day_no) {
 }
 
 
-// Adding a day
-var day_no = 1;
-$(document).ready(function() {
-  DayCreator(day_no)
-  $('#add_day').on('click', function() {
-    day_no = parseInt(day_no, 10);
-    clearItems(day_no);
-    if (day_no < 3) {
-      $('#day_buttons').append('<button type="button" class="btn btn-default">Day '+(day_no+1)+'</button>');
-      day_no += 1;
-    }
-    DayCreator(day_no)
-    alert(day_no)
-  });
-});
-
 /** Drop-down functions **/
 // Adds all hotel names to dropdown list
 for (var i=0; i<all_hotels.length; i++) {
@@ -103,6 +106,42 @@ for (var i=0; i<all_restaurants.length; i++) {
   $('#restaurants_list').append('<option value="restaurant_'+i+'">'+all_restaurants[i].place[0].name+'</option>')
 }
 
+// {{TBD}} Show Item in Itinerary and Store in Daily Plan Object
+function storeAndShow () {}
+
+
+// Adds a selected item to the database in a visits
+// function writeVisitToServer(attraction_object) {
+//   var post_data = {
+//     attraction_id: attraction_object['_id'],
+//     attraction_type: type_of_place
+//     day_number: current_day,
+//     visit_order: visit_order
+//   };
+
+//   // this callback function will be called if the request succeeds.
+//   // the response is passed into this callback function as responseData
+
+//   var post_callback = function (responseData) {
+//     // responseData.visit_id will be the id of database Visit object
+//   };
+
+//   // jQuery Ajax call
+//   $.post( "/visits", post_data, post_callback);
+// }
+
+// Add Attraction to Itinerary and Map on Specific Day
+$(document).ready(function() {
+  $('#add_hotel, #add_thing_to_do, #add_restaurant').on('click', function() {
+    var daily_plan = window.daily_plan;
+    var day_no = window.day_no.toString();
+    console.log($(this).context.id.slice(4,$(this).context.id.length));
+  })
+})
+
+
+
+// Create Marker (function that takes in lat, long, and title)
 
 // Add Hotels to Itinerary
 $(document).ready(function() {
