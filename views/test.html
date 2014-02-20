@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<script src="http://localhost:3000/bower_components/esprima/esprima.js"></script>
+
+<textarea style="float:left" id="code" rows=100 cols=100></textarea>
+<pre id="output" style="float:left;width:600px;height:800px;"></pre>
+
+<script type="text/javascript">
+$("#code").on('keypress', function(event) {
+	$("#output").text(JSON.stringify(esprima.parse($("#code").val())));
+});
+</script>
+{% endblock %}

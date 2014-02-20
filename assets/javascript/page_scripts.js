@@ -26,193 +26,304 @@ function initialize_gmaps() {
 }
 
 $(document).ready(function() {
-   initialize_gmaps();
+  initialize_gmaps();
+  addDayButton();
+  dayToggle();
+  addItems();
+  loadVisitsInDailyPlan(all_visits);
 });
 
-// Adding a day
+/************** PAGE SCRIPTS **************/
+
+// ** Global Variables ** //
 var day_no = 1;
-$(document).ready(function() {
-  DayCreator(day_no)
-  $('#add_day').on('click', function() {
-    day_no = parseInt(day_no, 10);
-    clearItems(day_no);
-    if (day_no < 5) {
-      $('#day_buttons').append('<button type="button" class="btn btn-default">Day '+(day_no+1)+'</button>');
-      day_no += 1;
-    }
-    DayCreator(day_no)
-  });
-});
+var no_of_visits = 0;
+var daily_plan = {
+	1: {hotels: [], thingsToDos: [], restaurants: [], markers: []}
+}
+var attractions = ['hotel', 'restaurant', 'thingsToDo'];
 
-/** Day Button Functions **/
-$(document).ready(function() {
+// ** Global Functions (Primary) ** //
+// Populates dropdowns with attraction items
+attractions.forEach(function(attraction) {
+  var all_items_object = objectTypeFinder(attraction);
+  for (var i=0; i<all_items_object.length; i++) {
+    $('#'+attraction+'s_dropdown').append('<option value="'+attraction+'_'+i+'" >'+all_items_object[i].place[0].name+'</option>')
+  }
+})
+
+// Creates a new day key corresponding to day number in the daily plan object
+function DayCreator (day_no) {
+  if(!daily_plan[day_no]) {
+    daily_plan[day_no] = {hotels: [], thingsToDos: [], restaurants: [], markers: []}
+  }
+}
+
+// Adds a day button and creats a new key in the daily plan object
+function addDayButton () {
+  $('#add_day').on('click', function() {
+    var no_of_days = parseInt($('#day_buttons button:last-child').text().slice(-1),10);
+    console.log(no_of_days)
+    // day_no = parseInt(day_no, 10);
+    clearItems(day_no);
+    if (no_of_days < 5) {
+      $('#day_buttons').append('<button type="button" class="btn btn-default">Day '+(no_of_days+1)+'</button>');
+      DayCreator(no_of_days+1)
+    }
+  });
+}
+
+// Toggles between days, clears and refreshes map and itinerary
+function dayToggle () {
   $('#day_buttons').on('click', 'button',function() {
-    // !!! the $(this) allows you to access the button that was clicked !!!
+    // **** !!! the $(this) below allows you to access the button that was clicked !!! ****
     clearItems(window.day_no);
     window.day_no = $(this).text().slice(-1);
-    alert(window.day_no)
+    alert(day_no)
     $("#daily_itinerary h2").text("Plan for Day "+day_no);
     showItems(window.day_no);
   })
-})
-
-/** Add Itinerary Item Functions **/
-var daily_plan = {};
-var DayCreator = function (day_no) {
-  daily_plan[day_no] = {hotels: [], things_to_do: [], restaurants: [], markers: []}
 }
 
-/** {{TBD}} Create a general type array that will be used for all general functions !!! **/
-// hotel, restaurant, things_to_do
+function addItems () {
+  attractions.forEach(function(attraction) {
+    $('#add_'+attraction).on('click', function() {
+      // Get daily_plan object, current day no, and item added
+      var daily_plan = window.daily_plan;
+      var day_no = window.day_no.toString();
+      var selected_value = $('#'+attraction+'s_dropdown').val().split("_")[1];
+      // Select correct JSON object store variable (all_hotels, all_ttd, or all_rest)
+      var all_items_object = objectTypeFinder(attraction);
+      var item_object = all_items_object[selected_value];
+      var item_name = item_object.place[0].name;
+      // Store item in daily plan object
+      daily_plan[day_no][attraction+'s'].push(item_object);
+      console.log(daily_plan);
+      // Add Item to Itinerary
+      $('#'+attraction+'_itinerary').append('<li>'+item_name+'</li>');
+      // Add map marker
+      var map_marker = createMarker(item_object, item_name);
+      AddMarker(map_marker, day_no);
 
-/** Clear Items Functionality **/
+      // Get type of button clicked in console
+      var item_type = ($(this).context.id.slice(4,$(this).context.id.length));
+      no_of_visits++
+      var post_data = {
+        attraction_id: item_object['_id'],
+        attraction_type: item_type,
+        day_number: day_no,
+        visit_order: no_of_visits
+      };
+      console.log(post_data);
+      writeVisitToServer(post_data);
+    })
+  })
+}
+
+function retrieveAttraction (visit_object) {
+  var all_items_object_array = objectTypeFinder(visit_object['attraction_type'])
+  var item_id_array = [];
+  for (i=0; i<all_items_object_array.length; i++) {
+    item_id_array.push(all_items_object_array[i]._id);
+  }
+  var item_position = item_id_array.indexOf(visit_object['attraction_id'])
+  return all_items_object_array[item_position];
+}
+
+function loadVisitsInDailyPlan (stored_visits) {
+  // console.log(stored_visits)
+  // console.log(stored_visits.length)
+  for (var i=0; i<stored_visits.length; i++) {
+    var visit_object = retrieveAttraction(stored_visits[i]);
+    // console.log(visit_object);
+    // console.log(stored_visits[i])
+    var visit_day = stored_visits[i]['day_number']
+    var visit_type = stored_visits[i]['attraction_type']+"s";
+    // console.log(stored_visits[i])
+    DayCreator(visit_day)
+    daily_plan[visit_day][visit_type].push(visit_object);
+    var visit_name = visit_object.place[0].name
+    $('#'+visit_type+'_itinerary').append('<li>'+visit_name+'</li>');
+    var visit_marker = createMarker(visit_object, visit_name)
+    daily_plan[visit_day]['markers'].push(visit_marker);
+  }
+}
+
+
+// ** Global Functions (Helpers) ** //
+// Clear items from itineraray and markers from map (Helper)
+$('#add_hotel','#add_thingsToDo','#add_restaurant').on('click')
+
+
 function clearItems(day_no) {
-  $("#hotel_itinerary li").remove()
-  $("#things_to_do_itinerary li").remove()
-  $("#restaurant_itinerary li").remove()
+  // Clear itinerary list items
+  attractions.forEach(function(attraction) {
+    $('#'+attraction+'_itinerary li').remove();
+  });
+  // Clear map markers
   for (var i = 0; i < daily_plan[day_no]['markers'].length; i++ ) {
     daily_plan[day_no]['markers'][i].setMap(null);
   }
 }
 
-/** Add Items on Day **/
-function showItems (day_no) {
-  // Array storing the (1) key from the daily_plan object and the (2) related DOM element
-  var itinerariries = [['hotels','#hotel_itinerary'], ['things_to_do','#things_to_do_itinerary'], ['restaurants','#restaurant_itinerary']];
-  for (j=0; j<itinerariries.length; j++) {
-  	var item = itinerariries[j]
-  	console.log(item);
-    for (i=0; i<daily_plan[day_no][item[0]].length; i++) {
-      $(item[1]).append('<li>'+daily_plan[day_no][item[0]][i].place[0].name+'</li>');
+// Takes a specific day of a day button toggle and (1) displays the attraction in the itinerary and (2) displays the map item (Helper)
+function showItems (current_day) {
+  // Display attraction on itinerary
+  attractions.forEach(function(attraction) {
+    for (i=0; i<daily_plan[current_day][attraction+'s'].length; i++) {
+      $('#'+attraction+'_itinerary').append('<li>'+daily_plan[current_day][attraction+'s'][i].place[0].name+'</li>');
     }
-  }
+  })
+  // Display attraction map marker
   for (i=0; i<daily_plan[day_no]['markers'].length; i++) {
     daily_plan[day_no]['markers'][i].setMap(map);
   }
 }
 
-
-/** Drop-down functions **/
-// Adds all hotel names to dropdown list
-for (var i=0; i<all_hotels.length; i++) {
-  $('#hotels_list').append('<option value="hotel_'+i+'" >'+all_hotels[i].place[0].name+'</option>')
+// Uses the attraction arrray to return the right JSON variable for the data type store (Helper)
+function objectTypeFinder (type) {
+  switch (type) {
+    case "hotel":
+      return all_hotels;
+      break;
+    case "restaurant":
+      return all_restaurants;
+      break;
+    case "thingsToDo":
+      return all_things_to_do;
+      break;
+   }
 }
-// Adds all things to do to dropdown list
-for (var i=0; i<all_things_to_do.length; i++) {
-  $('#things_to_do_list').append('<option value="ttd_'+i+'" >'+all_things_to_do[i].place[0].name+'</option>')
+
+// Takes an attraction object and uses it to create and add a marker to the map (Helper)
+function createMarker (attraction_object, attraction_name) {
+  // Create the marker
+  var latitude = attraction_object.place[0].location[0]
+  var longitude = attraction_object.place[0].location[1]
+  var attractionLatlng = new google.maps.LatLng(latitude,longitude)
+  var marker = new google.maps.Marker({
+    position: attractionLatlng,
+    title: attraction_name,
+    animation: google.maps.Animation.DROP
+  });
+  return marker
 }
-// Adds all restaurant names to dropdown list
-for (var i=0; i<all_restaurants.length; i++) {
-  $('#restaurants_list').append('<option value="restaurant_'+i+'">'+all_restaurants[i].place[0].name+'</option>')
+
+function AddMarker (map_marker, day_number) {
+  // Add the marker to the map by calling setMap()
+  daily_plan[day_number]['markers'].push(marker)
+  map_marker.setMap(map);
 }
 
-// {{TBD}} Show Item in Itinerary and Store in Daily Plan Object
-function storeAndShow () {}
+function writeVisitToServer(post_data) {
+  // this callback function will be called if the request succeeds.
+  // the response is passed into this callback function as responseData
+  var post_callback = function (responseData) {
+  };
+  // jQuery Ajax call
+  $.post( "/visits", {'attraction_type': post_data.attraction_type, 'attraction_id': post_data.attraction_id, 'visit_order': post_data.visit_order, 'day_number': post_data.day_number}, post_callback);
+}
 
 
-// Adds a selected item to the database in a visits
-// function writeVisitToServer(attraction_object) {
-//   var post_data = {
-//     attraction_id: attraction_object['_id'],
-//     attraction_type: type_of_place
-//     day_number: current_day,
-//     visit_order: visit_order
-//   };
+/************************ REFACTORED CODE ************************/
+// // Show type of button clicked in console ** (REFACTORED) **
+// $(document).ready(function() {
+//   $('#add_hotel, #add_thingsToDo, #add_restaurant').on('click', function() {
+//     var daily_plan = window.daily_plan;
+//     var day_no = window.day_no.toString();
+//     console.log($(this).context.id.slice(4,$(this).context.id.length));
+//   })
+// })
+  // Array storing the (1) key from the daily_plan object and the (2) related DOM element ** (REFACTORED) **
+  // var itinerariries = [['hotels','#hotel_itinerary'], ['thingsToDos','#thingsToDo_itinerary'], ['restaurants','#restaurant_itinerary']];
+  // for (j=0; j<itinerariries.length; j++) {
+  //   var item = itinerariries[j]
+  //   console.log(item);
+  //   for (i=0; i<daily_plan[day_no][item[0]].length; i++) {
+  //     $(item[1]).append('<li>'+daily_plan[day_no][item[0]][i].place[0].name+'</li>');
+  //   }
+  // }
 
-//   // this callback function will be called if the request succeeds.
-//   // the response is passed into this callback function as responseData
-
-//   var post_callback = function (responseData) {
-//     // responseData.visit_id will be the id of database Visit object
-//   };
-
-//   // jQuery Ajax call
-//   $.post( "/visits", post_data, post_callback);
+// // Adds all hotel names to dropdown list  ** (REFACTORED) **
+// for (var i=0; i<all_hotels.length; i++) {
+//   $('#hotels_dropdown').append('<option value="hotel_'+i+'" >'+all_hotels[i].place[0].name+'</option>')
+// }
+// // Adds all things to do to dropdown list ** (REFACTORED) **
+// for (var i=0; i<all_things_to_do.length; i++) {
+//   $('#thingsToDos_dropdown').append('<option value="ttd_'+i+'" >'+all_things_to_do[i].place[0].name+'</option>')
+// }
+// // Adds all restaurant names to dropdown list ** (REFACTORED) **
+// for (var i=0; i<all_restaurants.length; i++) {
+//   $('#restaurants_dropdown').append('<option value="restaurant_'+i+'">'+all_restaurants[i].place[0].name+'</option>')
 // }
 
-// Add Attraction to Itinerary and Map on Specific Day
-$(document).ready(function() {
-  $('#add_hotel, #add_thing_to_do, #add_restaurant').on('click', function() {
-    var daily_plan = window.daily_plan;
-    var day_no = window.day_no.toString();
-    console.log($(this).context.id.slice(4,$(this).context.id.length));
-  })
-})
-
-
-
-// Create Marker (function that takes in lat, long, and title)
-
-// Add Hotels to Itinerary
-$(document).ready(function() {
-  $('#add_hotel').on('click', function() {
-    // The ".val()" method below allows you access the selected item in the '#hotels_list' dropdown list (which is the select tag)
-    var daily_plan = window.daily_plan;
-    var day_no = window.day_no.toString();
-    var selected_value = $('#hotels_list').val().split("_")[1];
-    var hotel_object = all_hotels[selected_value]
-    var hotel_name = hotel_object.place[0].name
-    daily_plan[day_no]['hotels'].push(hotel_object)
-    console.log(daily_plan);
-    $('#hotel_itinerary').append('<li>'+hotel_name+'</li>');
+// // Add Hotels to Itinerary ** (REFACTORED) **
+// $(document).ready(function() {
+//   $('#add_hotel').on('click', function() {
+//     // The ".val()" method below allows you access the selected item in the '#hotels_dropdown' dropdown list (which is the select tag)
+//     var daily_plan = window.daily_plan;
+//     var day_no = window.day_no.toString();
+//     var selected_value = $('#hotels_dropdown').val().split("_")[1];
+//     var hotel_object = all_hotels[selected_value]
+    // var hotel_name = hotel_object.place[0].name
+    // daily_plan[day_no]['hotels'].push(hotel_object)
+    // console.log(daily_plan);
+    // $('#hotel_itinerary').append('<li>'+hotel_name+'</li>');
     // Add the hotel marker to the map
-    var latitude = hotel_object.place[0].location[0]
-    var longitude = hotel_object.place[0].location[1]
-    var hotelLatlng = new google.maps.LatLng(latitude,longitude)
-    var marker = new google.maps.Marker({
-      position: hotelLatlng,
-      title: hotel_name,
-      animation: google.maps.Animation.DROP
-    });
-    // Add the marker to the map by calling setMap()
-    daily_plan[day_no]['markers'].push(marker)
-    marker.setMap(map);
-  });
-// Add Things to do to Itinerary
-  $('#add_thing_to_do').on('click', function() {
-    // The ".val()" method below allows you access the selected item in the '#hotels_list' dropdown list (which is the select tag)
-    var daily_plan = window.daily_plan;
-    var day_no = window.day_no.toString();
-    var selected_value = $('#things_to_do_list').val().split("_")[1];
-    var things_to_do_object = all_things_to_do[selected_value]
-    var things_to_do_name = things_to_do_object.place[0].name
-    // window.daily_plan[day_no]['things_to_do'].push(things_to_do_object)
-    $('#things_to_do_itinerary').append('<li>'+things_to_do_name+'</li>');
-    daily_plan[day_no]['things_to_do'].push(things_to_do_object)
-    console.log(daily_plan);
-    var latitude = things_to_do_object.place[0].location[0]
-    var longitude = things_to_do_object.place[0].location[1]
-    var thingsToDoLatlng = new google.maps.LatLng(latitude,longitude)
-    var marker = new google.maps.Marker({
-      position: thingsToDoLatlng,
-      title: things_to_do_name,
-      animation: google.maps.Animation.DROP
-    });
-    // Add the marker to the map by calling setMap()
-    daily_plan[day_no]['markers'].push(marker)
-    marker.setMap(map);
-  });
-// Add Restaurants to Itinerary
-  $('#add_restaurant').on('click', function() {
-    // The ".val()" method below allows you access the selected item in the '#hotels_list' dropdown list (which is the select tag)
-    var daily_plan = window.daily_plan;
-    var day_no = window.day_no.toString();
-    var selected_value = $('#restaurants_list').val().split("_")[1];
-    var restaurants_object = all_restaurants[selected_value]
-    var restaurants_name = restaurants_object.place[0].name
-    $('#restaurant_itinerary').append('<li>'+restaurants_name+'</li>');
-    daily_plan[day_no]['restaurants'].push(restaurants_object)
-    console.log(daily_plan);
-    var latitude = restaurants_object.place[0].location[0]
-    var longitude = restaurants_object.place[0].location[1]
-    var restaurantsLatlng = new google.maps.LatLng(latitude,longitude)
-    var marker = new google.maps.Marker({
-      position: restaurantsLatlng,
-      title: restaurants_name,
-      animation: google.maps.Animation.DROP
-    });
-    // Add the marker to the map by calling setMap()
-    daily_plan[day_no]['markers'].push(marker)
-    marker.setMap(map);
-  })
-});
+//     var latitude = hotel_object.place[0].location[0]
+//     var longitude = hotel_object.place[0].location[1]
+//     var hotelLatlng = new google.maps.LatLng(latitude,longitude)
+//     var marker = new google.maps.Marker({
+//       position: hotelLatlng,
+//       title: hotel_name,
+//       animation: google.maps.Animation.DROP
+//     });
+//     // Add the marker to the map by calling setMap()
+//     daily_plan[day_no]['markers'].push(marker)
+//     marker.setMap(map);
+//   });
+// // Add Things to do to Itinerary ** (REFACTORED) **
+//   $('#add_thingsToDo').on('click', function() {
+//     var daily_plan = window.daily_plan;
+//     var day_no = window.day_no.toString();
+//     var selected_value = $('#thingsToDos_dropdown').val().split("_")[1];
+//     var thingsToDo_object = all_things_to_do[selected_value]
+//     var thingsToDo_name = thingsToDo_object.place[0].name
+//     $('#thingsToDo_itinerary').append('<li>'+thingsToDo_name+'</li>');
+//     daily_plan[day_no]['thingsToDos'].push(thingsToDo_object)
+//     console.log(daily_plan);
+//     var latitude = thingsToDo_object.place[0].location[0]
+//     var longitude = thingsToDo_object.place[0].location[1]
+//     var thingsToDoLatlng = new google.maps.LatLng(latitude,longitude)
+//     var marker = new google.maps.Marker({
+//       position: thingsToDoLatlng,
+//       title: thingsToDo_name,
+//       animation: google.maps.Animation.DROP
+//     });
+//     // Add the marker to the map by calling setMap()
+//     daily_plan[day_no]['markers'].push(marker)
+//     marker.setMap(map);
+//   });
+// // Add Restaurants to Itinerary ** (REFACTORED) **
+//   $('#add_restaurant').on('click', function() {
+//     var daily_plan = window.daily_plan;
+//     var day_no = window.day_no.toString();
+//     var selected_value = $('#restaurants_dropdown').val().split("_")[1];
+//     var restaurants_object = all_restaurants[selected_value]
+//     var restaurants_name = restaurants_object.place[0].name
+//     $('#restaurant_itinerary').append('<li>'+restaurants_name+'</li>');
+//     daily_plan[day_no]['restaurants'].push(restaurants_object)
+//     console.log(daily_plan);
+//     var latitude = restaurants_object.place[0].location[0]
+//     var longitude = restaurants_object.place[0].location[1]
+//     var restaurantsLatlng = new google.maps.LatLng(latitude,longitude)
+//     var marker = new google.maps.Marker({
+//       position: restaurantsLatlng,
+//       title: restaurants_name,
+//       animation: google.maps.Animation.DROP
+//     });
+//     // Add the marker to the map by calling setMap()
+//     daily_plan[day_no]['markers'].push(marker)
+//     marker.setMap(map);
+//   })
+// });
