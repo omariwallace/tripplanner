@@ -6,29 +6,29 @@
 {% block content %}
 <section class='row'>
 	<div class='col-lg-3'>
-		<div id='day_buttons' class='btn-group'>
+		<div id='day_buttons' class='btn-group center_buttons'>
 			<button type="button" class="btn btn-default">Day 1</button>
 		</div>
-		<div class='btn-group'>
+		<div class='btn-group center_buttons'>
 			<button type="button" class="btn btn-default" id="add_day">+Add Day</button>
 		</div>
 	</div>
 	<div class='col-lg-3'>
-		<h3 class="dropdown_label">Hotels</h3>
+		<h4 class="dropdown_label">Hotels</h4>
 		<select id="hotels_dropdown" class="form-control dropdown">
 			<option>Select Hotel...</option>
 		</select>
 		<button type="submit" class="btn btn-primary" id="add_hotel">Add</button>
 	</div>
 	<div class='col-lg-3'>
-		<h3 class="dropdown_label">Things to do</h3>
+		<h4 class="dropdown_label">Things to do</h4>
 		<select id="thingsToDos_dropdown" class="form-control dropdown">
 			<option>Select Activity...</option>
 		</select>
 		<button type="submit" class="btn btn-primary" id="add_thingsToDo">Add</button>
 	</div>
 	<div class='col-lg-3'>
-		<h3 class="dropdown_label">Restaurants</h3>
+		<h4 class="dropdown_label">Restaurants</h4>
 		<select id="restaurants_dropdown" class="form-control dropdown">
 			<option>Select Restaurant...</option>
 		</select>
@@ -37,18 +37,18 @@
 </section> <!-- end page head row -->
 <section class="row"> <!-- Itinerary -->
 	<div class="col-lg-3">
-		<article id="daily_itinerary">
-			<h2>Plan for Day 1</h2>
+		<article id="daily_itinerary" class="panel">
+			<h4 class="panel panel-heading panel-default">Plan for Day 1</h4>
 			<ul>
-				<li>Hotel
+				<li><h4>Hotel</h4>
 					<ul id="hotel_itinerary">
 					</ul>
 				</li>
-				<li>Things to Do
+				<li><h4>Things to Do</h4>
 					<ul id="thingsToDo_itinerary">
 					</ul>
 				</li>
-				<li>Restaurants
+				<li><h4>Restaurants</h4>
 					<ul id="restaurant_itinerary">
 					</ul>
 				</li>

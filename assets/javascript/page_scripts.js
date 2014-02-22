@@ -79,7 +79,7 @@ function dayToggle () {
     // **** !!! the $(this) below allows you to access the button that was clicked !!! ****
     clearItems(window.day_no);
     window.day_no = $(this).text().slice(-1);
-    alert(day_no)
+    // alert(day_no)
     $("#daily_itinerary h2").text("Plan for Day "+day_no);
     showItems(window.day_no);
   })
@@ -206,12 +206,12 @@ function createMarker (attraction_object, attraction_name) {
     title: attraction_name,
     animation: google.maps.Animation.DROP
   });
-  return marker
+  return marker;
 }
 
 function AddMarker (map_marker, day_number) {
   // Add the marker to the map by calling setMap()
-  daily_plan[day_number]['markers'].push(marker)
+  daily_plan[day_number]['markers'].push(map_marker)
   map_marker.setMap(map);
 }
 
